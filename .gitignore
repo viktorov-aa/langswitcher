@@ -3,3 +3,5 @@
 _pycache_/
 langswitcher/__pycache__/
 openspec/
+
+tests/__pycache__/

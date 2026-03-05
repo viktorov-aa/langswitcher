@@ -34,7 +34,22 @@ class LanguageSwitcherApp:
             logger.debug("Ignoring non-mapped key event: {}", key_name)
             return
         logger.debug("Mapped key '{}' to target layout '{}'", key_name, target_layout)
-        changed = self._layout_service.apply_layout(target_layout)
+        try:
+            changed = self._layout_service.apply_layout(target_layout)
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
+                "Failed to apply layout '{}' for key '{}': {}",
+                target_layout,
+                key_name,
+                exc,
+            )
+            return
+        logger.info(
+            "Processed key '{}' -> layout '{}', changed={}",
+            key_name,
+            target_layout,
+            changed,
+        )
         if changed:
             logger.debug("Layout switched to '{}'", target_layout)
         else:

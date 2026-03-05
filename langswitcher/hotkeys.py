@@ -21,11 +21,15 @@ class KeyboardListener:
         # Русский комментарий: библиотека keyboard отдает множество событий.
         # Мы нормализуем имя и пропускаем дальше только нужные клавиши.
         def _handle(event: Any) -> None:
+            event_type = getattr(event, "event_type", None)
             name = getattr(event, "name", None)
             scan_code = getattr(event, "scan_code", None)
+            if isinstance(event_type, str) and event_type != "down":
+                return
             if not isinstance(name, str):
                 return
             normalized = normalize_key_name(name)
+            normalized = self._normalize_shift_alias(normalized)
             normalized = self._normalize_shift(normalized, scan_code)
             if normalized in {"left_shift", "right_shift"}:
                 logger.debug("Keyboard event received: {} -> {}", name, normalized)
@@ -50,4 +54,12 @@ class KeyboardListener:
                 return "left_shift"
             if scan_code == 54:
                 return "right_shift"
+        return normalized_name
+
+    @staticmethod
+    def _normalize_shift_alias(normalized_name: str) -> str:
+        if normalized_name in {"left_shift", "lshift", "shift_left"}:
+            return "left_shift"
+        if normalized_name in {"right_shift", "rshift", "shift_right"}:
+            return "right_shift"
         return normalized_name

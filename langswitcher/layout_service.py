@@ -19,6 +19,8 @@ class WindowsLayoutService(LayoutService):
     """Windows API-backed layout switching service."""
 
     LAYOUT_IDS = {"en": "00000409", "ru": "00000419"}
+    WM_INPUTLANGCHANGEREQUEST = 0x0050
+    KLF_ACTIVATE = 0x00000001
 
     def __init__(self) -> None:
         self._last_applied: str | None = None
@@ -38,13 +40,26 @@ class WindowsLayoutService(LayoutService):
             raise RuntimeError("Windows layout switching is available only on Windows")
 
         # Русский комментарий: в Windows раскладки активируются через HKL-идентификатор.
-        # Сначала загружаем раскладку, затем явно активируем ее для текущего контекста.
-        hkl = self._user32.LoadKeyboardLayoutW(self.LAYOUT_IDS[layout], 1)
+        # Сначала загружаем раскладку, затем отправляем запрос смены в foreground-окно.
+        hkl = self._user32.LoadKeyboardLayoutW(self.LAYOUT_IDS[layout], self.KLF_ACTIVATE)
         if not hkl:
             raise RuntimeError(f"Failed to load layout '{layout}'")
-        result = self._user32.ActivateKeyboardLayout(hkl, 0)
-        if not result:
-            raise RuntimeError(f"Failed to activate layout '{layout}'")
+
+        foreground = self._user32.GetForegroundWindow()
+        if foreground:
+            posted = self._user32.PostMessageW(
+                foreground,
+                self.WM_INPUTLANGCHANGEREQUEST,
+                0,
+                hkl,
+            )
+            if not posted:
+                raise RuntimeError(f"Failed to request layout change '{layout}'")
+        else:
+            # fallback для редких случаев без foreground-окна (например, ранний старт).
+            result = self._user32.ActivateKeyboardLayout(hkl, 0)
+            if not result:
+                raise RuntimeError(f"Failed to activate layout '{layout}'")
 
         self._last_applied = layout
         return True

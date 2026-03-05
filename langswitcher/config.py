@@ -4,10 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-import warnings
-
-from marshmallow.warnings import ChangedInMarshmallow4Warning, RemovedInMarshmallow4Warning
-from yamldataclassconfig import YamlDataClassConfig
+import yaml
 
 from .errors import ConfigError
 
@@ -26,8 +23,8 @@ class AppConfig:
 
 
 @dataclass
-class RawConfig(YamlDataClassConfig):
-    """Raw YAML model loaded by yamldataclassconfig."""
+class RawConfig:
+    """Raw YAML model loaded from file payload."""
 
     hotkeys: dict = field(default_factory=dict)
     log_level: str = "INFO"
@@ -45,24 +42,8 @@ def load_app_config(path: Path) -> AppConfig:
     if not path.exists():
         raise ConfigError(f"Config file not found: {path}")
 
-    raw = RawConfig()
     try:
-        # Русский комментарий: suppress только технический шум сторонней библиотеки
-        # (он не влияет на корректность загрузки и путает пользователя при запуске).
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                message=r"Unknown type dict at RawConfig\.hotkeys: dict.*",
-                category=UserWarning,
-            )
-            warnings.filterwarnings(
-                "ignore",
-                message=r"Unknown type str at RawConfig\.log_level: str.*",
-                category=UserWarning,
-            )
-            warnings.filterwarnings("ignore", category=ChangedInMarshmallow4Warning)
-            warnings.filterwarnings("ignore", category=RemovedInMarshmallow4Warning)
-            raw.load(path=str(path), path_is_absolute=True)
+        raw = _load_raw_config(path)
     except Exception as exc:  # noqa: BLE001
         raise ConfigError(f"Failed to parse config '{path}': {exc}") from exc
 
@@ -117,3 +98,18 @@ def _validate_log_level(raw_level: object) -> str:
             f"Unsupported log level '{raw_level}'. Allowed levels: {sorted(ALLOWED_LOG_LEVELS)}"
         )
     return level
+
+
+def _load_raw_config(path: Path) -> RawConfig:
+    with path.open("r", encoding="utf-8") as config_file:
+        payload = yaml.safe_load(config_file)
+
+    if payload is None:
+        payload = {}
+    if not isinstance(payload, dict):
+        raise ConfigError("Config root must be a mapping")
+
+    return RawConfig(
+        hotkeys=payload.get("hotkeys", {}),
+        log_level=payload.get("log_level", "INFO"),
+    )
