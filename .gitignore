@@ -5,3 +5,5 @@ langswitcher/__pycache__/
 openspec/
 
 tests/__pycache__/
+
+*.pyc

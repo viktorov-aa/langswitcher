@@ -4,7 +4,7 @@
 - `Left Shift` -> English (`en`)
 - `Right Shift` -> Russian (`ru`)
 
-Текущая версия: `0.0.1`
+Текущая версия: `0.0.2`
 
 ## Зависимости
 
@@ -15,7 +15,7 @@
 
 ```bash
 python -m venv .venv
-./.venv/bin/pip install -r requirements-dev.txt
+./.venv/bin/pip install -r requirements.txt
 ```
 
 ## Запуск
@@ -76,7 +76,8 @@ hotkeys:
 
 ## Почему используются эти библиотеки
 
-- `pyyaml`: надежная загрузка YAML-конфига с явной валидацией полей в коде приложения.
+- `yamldataclassconfig`: загрузка YAML-конфига в dataclass-модель и базовая типовая проверка структуры.
+- `pyyaml`: YAML-парсер, который используется внутри `yamldataclassconfig`.
 - `keyboard`: популярная библиотека для глобального прослушивания клавиш в Windows.
 - `pytest`: минимальный и стандартный инструмент для автотестов.
 

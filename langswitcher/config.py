@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-import yaml
+from dataclasses_json import dataclass_json
+from yamldataclassconfig.config import YamlDataClassConfig
 
 from .errors import ConfigError
 
@@ -22,9 +23,10 @@ class AppConfig:
     log_level: str
 
 
+@dataclass_json
 @dataclass
-class RawConfig:
-    """Raw YAML model loaded from file payload."""
+class RawConfig(YamlDataClassConfig):
+    """Raw YAML model loaded via yamldataclassconfig."""
 
     hotkeys: dict = field(default_factory=dict)
     log_level: str = "INFO"
@@ -53,8 +55,6 @@ def load_app_config(path: Path) -> AppConfig:
 
 
 def _validate_hotkeys(raw_hotkeys: object) -> dict[str, str]:
-    # Русский комментарий: здесь делаем строгую валидацию структуры, чтобы приложение
-    # не запускалось с частично корректным конфигом и не вело себя непредсказуемо.
     if not isinstance(raw_hotkeys, dict):
         raise ConfigError("Config field 'hotkeys' must be a mapping")
 
@@ -101,15 +101,8 @@ def _validate_log_level(raw_level: object) -> str:
 
 
 def _load_raw_config(path: Path) -> RawConfig:
-    with path.open("r", encoding="utf-8") as config_file:
-        payload = yaml.safe_load(config_file)
-
-    if payload is None:
-        payload = {}
-    if not isinstance(payload, dict):
-        raise ConfigError("Config root must be a mapping")
-
-    return RawConfig(
-        hotkeys=payload.get("hotkeys", {}),
-        log_level=payload.get("log_level", "INFO"),
-    )
+    # NOTE: keep unparameterized `dict` in RawConfig to avoid runtime issues in
+    # yamldataclassconfig validation on Python 3.12 with generic aliases.
+    config = RawConfig.create()
+    config.load(path=path, path_is_absolute=True)
+    return config

@@ -58,3 +58,15 @@ def test_missing_log_level_uses_default_info() -> None:
     )
     config = load_app_config(path)
     assert config.log_level == "INFO"
+
+
+def test_non_mapping_root_raises_error() -> None:
+    path = _write_yaml("- item1\n- item2\n")
+    with pytest.raises(ConfigError):
+        load_app_config(path)
+
+
+def test_malformed_yaml_raises_error() -> None:
+    path = _write_yaml("hotkeys: [left_shift: en\n")
+    with pytest.raises(ConfigError):
+        load_app_config(path)
