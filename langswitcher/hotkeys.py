@@ -16,6 +16,7 @@ class KeyboardListener:
     def __init__(self, keyboard_module: Any) -> None:
         self._keyboard = keyboard_module
         self._hook = None
+        self._pending_shift_tap: str | None = None
 
     def start(self, on_key: Callable[[str], None]) -> None:
         # Русский комментарий: библиотека keyboard отдает множество событий.
@@ -24,16 +25,33 @@ class KeyboardListener:
             event_type = getattr(event, "event_type", None)
             name = getattr(event, "name", None)
             scan_code = getattr(event, "scan_code", None)
-            if isinstance(event_type, str) and event_type != "down":
+            if not isinstance(event_type, str) or event_type not in {"down", "up"}:
                 return
             if not isinstance(name, str):
                 return
             normalized = normalize_key_name(name)
             normalized = self._normalize_shift_alias(normalized)
             normalized = self._normalize_shift(normalized, scan_code)
-            if normalized in {"left_shift", "right_shift"}:
-                logger.debug("Keyboard event received: {} -> {}", name, normalized)
-                on_key(normalized)
+            is_shift = normalized in {"left_shift", "right_shift"}
+
+            if event_type == "down":
+                if is_shift:
+                    if self._pending_shift_tap is None:
+                        self._pending_shift_tap = normalized
+                    elif self._pending_shift_tap != normalized:
+                        self._pending_shift_tap = None
+                else:
+                    self._pending_shift_tap = None
+                return
+
+            if not is_shift:
+                return
+            if self._pending_shift_tap != normalized:
+                return
+
+            self._pending_shift_tap = None
+            logger.debug("Keyboard tap event received: {} -> {}", name, normalized)
+            on_key(normalized)
 
         self._hook = self._keyboard.hook(_handle)
 
