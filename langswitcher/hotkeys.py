@@ -1,0 +1,53 @@
+"""Keyboard hook integration."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
+
+from loguru import logger
+
+from .config import normalize_key_name
+
+
+class KeyboardListener:
+    """Global keyboard listener based on the `keyboard` package."""
+
+    def __init__(self, keyboard_module: Any) -> None:
+        self._keyboard = keyboard_module
+        self._hook = None
+
+    def start(self, on_key: Callable[[str], None]) -> None:
+        # Русский комментарий: библиотека keyboard отдает множество событий.
+        # Мы нормализуем имя и пропускаем дальше только нужные клавиши.
+        def _handle(event: Any) -> None:
+            name = getattr(event, "name", None)
+            scan_code = getattr(event, "scan_code", None)
+            if not isinstance(name, str):
+                return
+            normalized = normalize_key_name(name)
+            normalized = self._normalize_shift(normalized, scan_code)
+            if normalized in {"left_shift", "right_shift"}:
+                logger.debug("Keyboard event received: {} -> {}", name, normalized)
+                on_key(normalized)
+
+        self._hook = self._keyboard.hook(_handle)
+
+    def wait_forever(self) -> None:
+        # Русский комментарий: wait("esc") удерживает процесс активным,
+        # при этом глобальный hook продолжает получать события Shift.
+        self._keyboard.wait("esc")
+
+    def stop(self) -> None:
+        if self._hook is not None:
+            self._keyboard.unhook(self._hook)
+            self._hook = None
+
+    @staticmethod
+    def _normalize_shift(normalized_name: str, scan_code: Any) -> str:
+        if normalized_name == "shift":
+            if scan_code == 42:
+                return "left_shift"
+            if scan_code == 54:
+                return "right_shift"
+        return normalized_name

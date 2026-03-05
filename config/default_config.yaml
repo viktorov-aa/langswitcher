@@ -1,0 +1,4 @@
+log_level: INFO
+hotkeys:
+  left_shift: en
+  right_shift: ru

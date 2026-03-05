@@ -1,0 +1,5 @@
+.codex/
+.venv/
+_pycache_/
+langswitcher/__pycache__/
+openspec/

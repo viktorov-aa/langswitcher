@@ -1,0 +1,4 @@
+keyboard==0.13.5
+loguru==0.7.3
+pyyaml==6.0.3
+yamldataclassconfig==2.0.4
