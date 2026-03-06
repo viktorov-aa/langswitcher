@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Callable
 from typing import Any
 
@@ -19,8 +20,6 @@ class KeyboardListener:
         self._pending_shift_tap: str | None = None
 
     def start(self, on_key: Callable[[str], None]) -> None:
-        # Русский комментарий: библиотека keyboard отдает множество событий.
-        # Мы нормализуем имя и пропускаем дальше только нужные клавиши.
         def _handle(event: Any) -> None:
             event_type = getattr(event, "event_type", None)
             name = getattr(event, "name", None)
@@ -56,9 +55,9 @@ class KeyboardListener:
         self._hook = self._keyboard.hook(_handle)
 
     def wait_forever(self) -> None:
-        # Русский комментарий: wait("esc") удерживает процесс активным,
-        # при этом глобальный hook продолжает получать события Shift.
-        self._keyboard.wait("esc")
+        # Бесконечное ожидание — процесс завершается только по Ctrl+C (KeyboardInterrupt).
+        # Глобальный hook продолжает получать события Shift.
+        threading.Event().wait()
 
     def stop(self) -> None:
         if self._hook is not None:
