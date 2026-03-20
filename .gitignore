@@ -1,9 +1,10 @@
 .codex/
 .venv/
-_pycache_/
+__pycache__/
 langswitcher/__pycache__/
 openspec/
 
 tests/__pycache__/
+.pytest_cache/
 
 *.pyc

@@ -55,8 +55,7 @@ class KeyboardListener:
         self._hook = self._keyboard.hook(_handle)
 
     def wait_forever(self) -> None:
-        # Бесконечное ожидание — процесс завершается только по Ctrl+C (KeyboardInterrupt).
-        # Глобальный hook продолжает получать события Shift.
+        # Keep the process alive while the global keyboard hook runs in the background.
         threading.Event().wait()
 
     def stop(self) -> None:

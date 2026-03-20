@@ -101,8 +101,8 @@ def _validate_log_level(raw_level: object) -> str:
 
 
 def _load_raw_config(path: Path) -> RawConfig:
-    # NOTE: keep unparameterized `dict` in RawConfig to avoid runtime issues in
-    # yamldataclassconfig validation on Python 3.12 with generic aliases.
+    # Keep `dict` unparameterized here because yamldataclassconfig trips over
+    # generic aliases during runtime validation on Python 3.12.
     config = RawConfig.create()
     config.load(path=path, path_is_absolute=True)
     return config

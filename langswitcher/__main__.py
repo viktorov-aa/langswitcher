@@ -1,8 +1,8 @@
-"""Script entrypoint for LangSwitcher."""
+"""Package entrypoint for `python -m langswitcher`."""
 
 from __future__ import annotations
 
-from langswitcher.cli import main
+from .cli import main
 
 
 if __name__ == "__main__":

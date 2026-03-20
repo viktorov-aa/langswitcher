@@ -43,8 +43,8 @@ class WindowsLayoutService(LayoutService):
             if active_layout == layout:
                 return False
 
-        # Русский комментарий: в Windows раскладки активируются через HKL-идентификатор.
-        # Сначала загружаем раскладку, затем отправляем запрос смены в foreground-окно.
+        # Windows layout switching uses an HKL handle. Load the layout first,
+        # then ask the foreground window to activate it.
         hkl = self._user32.LoadKeyboardLayoutW(self.LAYOUT_IDS[layout], self.KLF_ACTIVATE)
         if not hkl:
             raise RuntimeError(f"Failed to load layout '{layout}'")
@@ -60,7 +60,7 @@ class WindowsLayoutService(LayoutService):
             if not posted:
                 raise RuntimeError(f"Failed to request layout change '{layout}'")
         else:
-            # fallback для редких случаев без foreground-окна (например, ранний старт).
+            # Fall back to direct activation when no foreground window is available.
             result = self._user32.ActivateKeyboardLayout(hkl, 0)
             if not result:
                 raise RuntimeError(f"Failed to activate layout '{layout}'")
