@@ -87,9 +87,10 @@ Run the test suite:
 
 ## Logging
 
-- Logging is handled by `loguru`
-- Startup logs include the config path, effective log level, and loaded hotkey mapping
-- With `log_level: DEBUG`, the app also logs Shift tap processing and layout-switch attempts
+- Logging is handled by `loguru` with Solarized Dark colors (Ethan Schoonover)
+- Console format: `YYYY-MM-DD HH:mm:ss | LEVEL   | message` on stderr
+- The console sink is `INFO`: startup/shutdown messages, warnings, and errors
+- Per-key Shift processing and layout-switch traces stay at `DEBUG` and are not printed by default
 
 ## Project layout
 

@@ -44,7 +44,7 @@ class LanguageSwitcherApp:
                 exc,
             )
             return
-        logger.info(
+        logger.debug(
             "Processed key '{}' -> layout '{}', changed={}",
             key_name,
             target_layout,

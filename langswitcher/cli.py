@@ -11,7 +11,7 @@ from .app import LanguageSwitcherApp
 from .config import ConfigError, load_app_config, resolve_config_path
 from .hotkeys import KeyboardListener
 from .layout_service import WindowsLayoutService
-from .logging_setup import configure_logging
+from .logging_setup import setup_logging
 from .version import __version__
 
 
@@ -26,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = build_parser().parse_args()
-    configure_logging("INFO")
+    setup_logging()
 
     if os.name != "nt":
         if _is_wsl():
@@ -48,7 +48,6 @@ def main() -> int:
         logger.error("Configuration error: {}", exc)
         return 2
 
-    configure_logging(config.log_level)
     logger.info("Application log level set to {}", config.log_level)
     logger.info("Hotkey mapping loaded: {}", config.hotkeys)
 
